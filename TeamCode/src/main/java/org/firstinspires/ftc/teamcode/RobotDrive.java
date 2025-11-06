@@ -12,7 +12,6 @@ public class RobotDrive {
     public DcMotor backRight;
     public double botHeading;
 
-
     public RobotDrive (DcMotor frontLeft, DcMotor backLeft, DcMotor frontRight, DcMotor backRight) {
         this.frontLeft = frontLeft;
         this.backLeft = backLeft;
@@ -50,6 +49,7 @@ public class RobotDrive {
 
 
     }
+
 
 
 

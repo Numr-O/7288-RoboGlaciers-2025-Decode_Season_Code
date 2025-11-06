@@ -32,43 +32,37 @@ package org.firstinspires.ftc.teamcode;
 
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
+import com.qualcomm.hardware.limelightvision.LLResult;
 
 
 
-
-/*
- * This file contains an example of an iterative (Non-Linear) "OpMode".
- * An OpMode is a 'program' that runs in either the autonomous or the teleop period of an FTC match.
- * The names of OpModes appear on the menu of the FTC Driver Station.
- * When a selection is made from the menu, the corresponding OpMode
- * class is instantiated on the Robot Controller and executed.
- *
- * This particular OpMode just executes a basic Tank Drive Teleop for a two wheeled robot
- * It includes all the skeletal structure that all iterative OpModes contain.
- *
- * Use Android Studio to Copy this Class, and Paste it into your team's code folder with a new name.
- * Remove or comment out the @Disabled line to add this OpMode to the Driver Station OpMode list
- */
 
 @TeleOp
-public class Robot_OpMode_Iterative extends OpMode {
-
+public class Teleop extends OpMode {
 
     RobotHardware robothwde = new RobotHardware();
 
 
     double headingOffset;
+
     RobotDrive robotDrive;
+    LimeLightTrackingAndDistance limeLightTrackingAndDistance;
+
 
     /*
      * Code to run ONCE when the driver hits INIT
      */
     @Override
     public void init() {
+        //initializes the robot by passing in its hardware map
         robothwde.init(hardwareMap);
 
+        //This is the constructor for the drive class
         robotDrive = new RobotDrive(robothwde.frontLeftMotor, robothwde.backLeftMotor, robothwde.frontRightMotor, robothwde.backRightMotor);
+        limeLightTrackingAndDistance = new LimeLightTrackingAndDistance(robothwde.turretMotor);
 
+        robothwde.limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
+        //This is the setup for the limelight A3 camera's pipeline
         robothwde.limelight.pipelineSwitch(0);
 
 
@@ -87,6 +81,7 @@ public class Robot_OpMode_Iterative extends OpMode {
      */
     @Override
     public void start() {
+        robothwde.limelight.start();
 
     }
 
@@ -96,26 +91,81 @@ public class Robot_OpMode_Iterative extends OpMode {
     @Override
     public void loop() {
 
+        LLResult llResult = robothwde.limelight.getLatestResult();
+        limeLightTrackingAndDistance.setLlResult(robothwde.limelight.getLatestResult());
 
-
-
-
-
-
-        if (gamepad1.start) {
-            headingOffset = -robothwde.imu.getAngularOrientation().firstAngle;
-        }
+        double distance = limeLightTrackingAndDistance.distanceToTarget();
+        limeLightTrackingAndDistance.trackAprilTag();
         robotDrive.controlerDrive(-gamepad1.left_stick_y,gamepad1.left_stick_x,gamepad1.right_stick_x, robothwde.imu, headingOffset);
 
 
 
+        telemetry.addData("TX", llResult.getTx());
+        telemetry.addData("TA", llResult.getTa());
+        telemetry.addData("Valid", llResult.isValid());
+        telemetry.addData("Distance", distance);
+        telemetry.addData("DIRECTION: ", limeLightTrackingAndDistance.DIRECTION);
+
+
+
+
+        //If statement used to change the orientation for the concentric driving
+        if (gamepad1.start) {
+            headingOffset = -robothwde.imu.getAngularOrientation().firstAngle;
         }
+
+
+
+
+
+
+        if (gamepad1.right_trigger > 0.5) {
+            robothwde.shooterMotorOne.setVelocity(-limeLightTrackingAndDistance.calculateRPMForShooter());
+            robothwde.shooterMotorTwo.setVelocity(limeLightTrackingAndDistance.calculateRPMForShooter());
+        } else {
+            robothwde.shooterMotorOne.setVelocity(0);
+            robothwde.shooterMotorTwo.setVelocity(0);
+        }
+
+        telemetry.addData("velocity", limeLightTrackingAndDistance.calculateRPMForShooter());
+
+
+
+
+
+
+        if (gamepad2.a) {
+          robothwde.intakeServoRight.setPosition(0.66); //OUT
+          robothwde.intakeServoLeft.setPosition(0.34); //OUT
+
+        } else if (gamepad2.b) {
+         robothwde.intakeServoRight.setPosition(0.49); //IN
+         robothwde.intakeServoLeft.setPosition(0.515); //IN
+
+        }
+
+        if (gamepad2.right_trigger > 0.5) {
+            robothwde.testMotor.setPower(1);
+        } else {
+            robothwde.testMotor.setPower(0);
+        }
+
+
+        if (gamepad2.y) {
+            robothwde.indexerServo.setPosition(1);
+        } else if (gamepad2.x) {
+            robothwde.indexerServo.setPosition(0.5);
+        } else {
+            robothwde.indexerServo.setPosition(0);
+        }
+    }
 
     /*
      * Code to run ONCE after the driver hits STOP
      */
     @Override
     public void stop() {
+
     }
 
 }

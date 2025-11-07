@@ -128,7 +128,7 @@ public class Teleop extends OpMode {
         }
 
         telemetry.addData("velocity", limeLightTrackingAndDistance.calculateRPMForShooter());
-
+        telemetry.addData("PID Motor pow", limeLightTrackingAndDistance.getOutput());
 
 
 

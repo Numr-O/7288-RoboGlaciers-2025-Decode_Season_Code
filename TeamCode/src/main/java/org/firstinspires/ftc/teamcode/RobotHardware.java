@@ -24,21 +24,23 @@ public class RobotHardware {
     public DcMotor frontRightMotor;
     public DcMotor backRightMotor;
     public DcMotor turretMotor;
-    public DcMotor testMotor;
+    public DcMotor intakeMotor;
 
 
     public Servo intakeServoLeft;
     public Servo intakeServoRight;
     public Servo indexerServo;
-    //public Servo intakeBall;
 
 
+    public DcMotorEx shooterMotorTop;
+    public DcMotorEx shooterMotorBottom;
 
-    public DcMotorEx shooterMotorOne;
-    public DcMotorEx shooterMotorTwo;
+
+    public ColorRangeSensor colorPosA; //Indexer Servo 0.9
+    public ColorRangeSensor colorPosB; //Indexer Servo 0.5
+    public ColorRangeSensor colorPosC; //Indexer Servo 0.1
 
 
-    public ColorRangeSensor testColor;
 
     HardwareMap hwmap;
 
@@ -67,9 +69,9 @@ public class RobotHardware {
         turretMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
-        testMotor = hwmap.get(DcMotor.class, "test");
-        testMotor.setDirection(DcMotor.Direction.FORWARD);
-        testMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        intakeMotor = hwmap.get(DcMotor.class, "test");
+        intakeMotor.setDirection(DcMotor.Direction.FORWARD);
+        intakeMotor.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
 
 
         intakeServoLeft = hwmap.get(Servo.class, "intakeL");
@@ -79,16 +81,17 @@ public class RobotHardware {
         indexerServo = hwmap.get(Servo.class, "indexer");
 
 
-        //intakeBall = hwmap.get(Servo.class, "ballin");
 
 
-        shooterMotorOne = hwmap.get(DcMotorEx.class, "sm1");
-        shooterMotorTwo = hwmap.get(DcMotorEx.class, "sm2");
 
+        shooterMotorTop = hwmap.get(DcMotorEx.class, "smTop");
+        shooterMotorBottom = hwmap.get(DcMotorEx.class, "smBottom");
 
-        shooterMotorOne.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
-        shooterMotorTwo.setZeroPowerBehavior(DcMotor.ZeroPowerBehavior.BRAKE);
+        shooterMotorTop.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        shooterMotorBottom.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
 
+        shooterMotorTop.setDirection(DcMotorEx.Direction.REVERSE);
+        shooterMotorBottom.setDirection(DcMotorEx.Direction.FORWARD);
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
@@ -99,7 +102,9 @@ public class RobotHardware {
         imu.initialize(parameters);
 
 
-        testColor = hwmap.get(ColorRangeSensor.class, "colorOne");
+        colorPosA = hwmap.get(ColorRangeSensor.class, "colorPosA");
+        colorPosB = hwmap.get(ColorRangeSensor.class, "colorPosB");
+        colorPosC = hwmap.get(ColorRangeSensor.class, "colorPosC");
 
 
         limelight = hwmap.get(Limelight3A.class, "LimeLight");

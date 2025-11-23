@@ -33,7 +33,9 @@ package org.firstinspires.ftc.teamcode;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.hardware.limelightvision.LLResult;
+import com.qualcomm.robotcore.util.ElapsedTime;
 
+import org.firstinspires.ftc.robotcore.external.navigation.DistanceUnit;
 
 
 
@@ -41,14 +43,21 @@ import com.qualcomm.hardware.limelightvision.LLResult;
 public class Teleop extends OpMode {
 
     RobotHardware robothwde = new RobotHardware();
-
-
     double headingOffset;
+
+    double SERVOINTAKEPOSRIGHT = 0.66;
+    double SERVOINTAKEPOSLEFT = 0.34;
+    double SERVOTRAVELPOSRIGHT = 0.55;
+    double SERVOTRAVELPOSLEFT = 0.45;
+    double SERVOTRANSFERPOSRIGHT = 0.49;
+    double SERVOTRANSFERPOSLEFT = 0.515;
+    double POSA = 0.9;
+    double POSB = 0.5;
+    double POSC = 0.09;
 
     RobotDrive robotDrive;
     LimeLightTrackingAndDistance limeLightTrackingAndDistance;
-
-
+    IndexerShootingAndIntake indexerShootingAndIntake;
     /*
      * Code to run ONCE when the driver hits INIT
      */
@@ -59,13 +68,16 @@ public class Teleop extends OpMode {
 
         //This is the constructor for the drive class
         robotDrive = new RobotDrive(robothwde.frontLeftMotor, robothwde.backLeftMotor, robothwde.frontRightMotor, robothwde.backRightMotor);
+
         limeLightTrackingAndDistance = new LimeLightTrackingAndDistance(robothwde.turretMotor);
+
+        Object[] hardwareList = {robothwde.indexerServo,robothwde.intakeServoLeft,robothwde.intakeServoRight,robothwde.shooterMotorTop,robothwde.shooterMotorBottom,robothwde.intakeMotor,robothwde.colorPosA,robothwde.colorPosB,robothwde.colorPosC};
+        indexerShootingAndIntake = new IndexerShootingAndIntake(hardwareList);
+
 
         robothwde.limelight.setPollRateHz(100); // This sets how often we ask Limelight for data (100 times per second)
         //This is the setup for the limelight A3 camera's pipeline
         robothwde.limelight.pipelineSwitch(0);
-
-
 
     }
 
@@ -74,6 +86,7 @@ public class Teleop extends OpMode {
      */
     @Override
     public void init_loop() {
+
     }
 
     /*
@@ -91,6 +104,10 @@ public class Teleop extends OpMode {
     @Override
     public void loop() {
 
+        if (gamepad1.start) {
+            headingOffset = -robothwde.imu.getAngularOrientation().firstAngle;
+        }
+
         LLResult llResult = robothwde.limelight.getLatestResult();
         limeLightTrackingAndDistance.setLlResult(robothwde.limelight.getLatestResult());
 
@@ -101,63 +118,36 @@ public class Teleop extends OpMode {
 
 
         telemetry.addData("TX", llResult.getTx());
-        telemetry.addData("TA", llResult.getTa());
         telemetry.addData("Valid", llResult.isValid());
         telemetry.addData("Distance", distance);
-        telemetry.addData("DIRECTION: ", limeLightTrackingAndDistance.DIRECTION);
-
-
-
-
-        //If statement used to change the orientation for the concentric driving
-        if (gamepad1.start) {
-            headingOffset = -robothwde.imu.getAngularOrientation().firstAngle;
-        }
-
-
-
-
-
-
-        if (gamepad1.right_trigger > 0.5) {
-            robothwde.shooterMotorOne.setVelocity(-limeLightTrackingAndDistance.calculateRPMForShooter());
-            robothwde.shooterMotorTwo.setVelocity(limeLightTrackingAndDistance.calculateRPMForShooter());
-        } else {
-            robothwde.shooterMotorOne.setVelocity(0);
-            robothwde.shooterMotorTwo.setVelocity(0);
-        }
-
+        telemetry.addData("test", robothwde.colorPosA.getDistance(DistanceUnit.MM));
         telemetry.addData("velocity", limeLightTrackingAndDistance.calculateRPMForShooter());
-        telemetry.addData("PID Motor pow", limeLightTrackingAndDistance.getOutput());
 
 
-
-
-
-        if (gamepad2.a) {
-          robothwde.intakeServoRight.setPosition(0.66); //OUT
-          robothwde.intakeServoLeft.setPosition(0.34); //OUT
-
-        } else if (gamepad2.b) {
-         robothwde.intakeServoRight.setPosition(0.49); //IN
-         robothwde.intakeServoLeft.setPosition(0.515); //IN
-
-        }
-
-        if (gamepad2.right_trigger > 0.5) {
-            robothwde.testMotor.setPower(1);
+        if (gamepad1.right_trigger > 0.6) {
+            indexerShootingAndIntake.shootBalls(50);
         } else {
-            robothwde.testMotor.setPower(0);
+            telemetry.addData("else: ", true);
         }
 
 
-        if (gamepad2.y) {
-            robothwde.indexerServo.setPosition(1);
-        } else if (gamepad2.x) {
+
+        telemetry.addData("Shooter Case", indexerShootingAndIntake.getShooterState());
+
+
+
+
+
+        if (gamepad1.dpad_up) {
+            robothwde.indexerServo.setPosition(0.91);
+        } else if (gamepad1.dpad_right) {
             robothwde.indexerServo.setPosition(0.5);
-        } else {
+        } else if (gamepad1.dpad_down) {
+            robothwde.indexerServo.setPosition(0.09);
+        } else if (gamepad2.a) {
             robothwde.indexerServo.setPosition(0);
         }
+
     }
 
     /*

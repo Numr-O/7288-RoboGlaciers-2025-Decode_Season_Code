@@ -20,10 +20,7 @@ buildscript {
 allprojects {
     repositories {
         mavenCentral()
-        google()
-        maven {
-            url = "https://mymaven.bylazar.com/releases"
-        }	
+        google()	
     }
 }
 

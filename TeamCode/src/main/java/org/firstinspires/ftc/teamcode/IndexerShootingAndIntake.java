@@ -46,7 +46,16 @@ public class IndexerShootingAndIntake {
         INDEXER_EMPTY,
         STOP_SHOOTING
     }
-    ShootingStates shootingState = ShootingStates.SHOOTING_START;
+    ShootingStates shootingState = ShootingStates.INDEXER_EMPTY;
+
+    public enum IndexStates {
+        INDEXER_EMPTY,
+        INDEX_TO_POS_A,
+        INDEX_TO_POS_B,
+        INDEX_TO_POS_C,
+        INDEXER_FULL
+    }
+    IndexStates indexStates = IndexStates.INDEXER_EMPTY;
 
     boolean areShooterMotorsAtSpeed;
 
@@ -64,9 +73,19 @@ public class IndexerShootingAndIntake {
         this.colorPosC = (ColorRangeSensor) hardwareList[8];
     }
 
-
+    private boolean doesPosAHaveBall () {
+        return colorPosA.getDistance(DistanceUnit.MM) < 50;
+    }
+    private boolean doesPosBHaveBall () {
+        return colorPosB.getDistance(DistanceUnit.MM) < 50;
+    }
+    private boolean doesPosCHaveBall () {
+        return colorPosC.getDistance(DistanceUnit.MM) < 50;
+    }
 
     public void shootBalls (double shooterVelocity) {
+
+        areShooterMotorsAtSpeed = shooterMotorTop.getVelocity() == shooterVelocity && shooterMotorBottom.getVelocity() == -shooterVelocity;
         switch (shootingState) {
             case SHOOTING_START:
                 shootingState = ShootingStates.INDEXER_EMPTY;
@@ -74,9 +93,8 @@ public class IndexerShootingAndIntake {
             case STOP_SHOOTING:
                 break;
             case INDEXER_EMPTY:
-                shooterMotorTop.setVelocity(shooterVelocity);
-                shooterMotorBottom.setVelocity(shooterVelocity);
-                areShooterMotorsAtSpeed = shooterMotorTop.getVelocity() == -shooterVelocity && shooterMotorBottom.getVelocity() == shooterVelocity;
+                shooterMotorTop.setVelocity(0);
+                shooterMotorBottom.setVelocity(0);
 
                 intakeServoRight.setPosition(SERVO_TRAVEL_POS_RIGHT);
                 intakeServoLeft.setPosition(SERVO_TRAVEL_POS_LEFT);
@@ -93,21 +111,31 @@ public class IndexerShootingAndIntake {
                 if (colorPosC.getDistance(DistanceUnit.MM) < 50) {
                     shootingState = ShootingStates.SHOOTING_C;
                     break;
+                } else {
+                    shootingState = ShootingStates.STOP_SHOOTING;
+                    break;
                 }
             case SHOOTING_A:
+                shooterMotorTop.setVelocity(-shooterVelocity);
+                shooterMotorBottom.setVelocity(shooterVelocity);
+
                 intakeServoRight.setPosition(SERVO_TRAVEL_POS_RIGHT);
                 intakeServoLeft.setPosition(SERVO_TRAVEL_POS_LEFT);
                 intakeMotor.setPower(1);
-                while (!areShooterMotorsAtSpeed) {
-                    continue;
+
+                if (!areShooterMotorsAtSpeed) {
+                    timer.reset();
+                    indexerServo.setPosition(INDEXER_SERVO_POS_A);
+                    while (timer.milliseconds() < 750) {
+                        continue;
+                    }
+                    intakeServoRight.setPosition(SERVO_TRANSFER_POS_RIGHT);
+                    intakeServoLeft.setPosition(SERVO_TRANSFER_POS_LEFT);
+                    timer.reset();
+                    while (timer.milliseconds() < 750) {
+                        continue;
+                    }
                 }
-                timer.reset();
-                indexerServo.setPosition(INDEXER_SERVO_POS_A);
-                while (timer.milliseconds() < 750) {
-                    continue;
-                }
-                intakeServoRight.setPosition(SERVO_TRANSFER_POS_RIGHT);
-                intakeServoLeft.setPosition(SERVO_TRANSFER_POS_LEFT);
 
                 if (colorPosB.getDistance(DistanceUnit.MM) < 50) {
                     shootingState = ShootingStates.SHOOTING_B;
@@ -116,24 +144,27 @@ public class IndexerShootingAndIntake {
                     shootingState = ShootingStates.SHOOTING_C;
                     break;
                 } else {
-                    shootingState = ShootingStates.STOP_SHOOTING;
+                    shootingState = ShootingStates.INDEXER_EMPTY;
                     break;
                 }
             case SHOOTING_B:
                 intakeServoRight.setPosition(SERVO_TRAVEL_POS_RIGHT);
                 intakeServoLeft.setPosition(SERVO_TRAVEL_POS_LEFT);
                 intakeMotor.setPower(1);
-                while (!areShooterMotorsAtSpeed) {
-                    continue;
-                }
-                timer.reset();
-                indexerServo.setPosition(INDEXER_SERVO_POS_B);
-                while (timer.milliseconds() < 750) {
-                    continue;
-                }
-                intakeServoRight.setPosition(SERVO_TRANSFER_POS_RIGHT);
-                intakeServoLeft.setPosition(SERVO_TRANSFER_POS_LEFT);
 
+                if (!areShooterMotorsAtSpeed) {
+                    timer.reset();
+                    indexerServo.setPosition(INDEXER_SERVO_POS_B);
+                    while (timer.milliseconds() < 750) {
+                        continue;
+                    }
+                    intakeServoRight.setPosition(SERVO_TRANSFER_POS_RIGHT);
+                    intakeServoLeft.setPosition(SERVO_TRANSFER_POS_LEFT);
+                    timer.reset();
+                    while (timer.milliseconds() < 750) {
+                        continue;
+                    }
+                }
                 if (colorPosA.getDistance(DistanceUnit.MM) < 50) {
                     shootingState = ShootingStates.SHOOTING_A;
                     break;
@@ -141,23 +172,26 @@ public class IndexerShootingAndIntake {
                     shootingState = ShootingStates.SHOOTING_C;
                     break;
                 } else {
-                    shootingState = ShootingStates.STOP_SHOOTING;
+                    shootingState = ShootingStates.INDEXER_EMPTY;
                     break;
                 }
             case SHOOTING_C:
                 intakeServoRight.setPosition(SERVO_TRAVEL_POS_RIGHT);
                 intakeServoLeft.setPosition(SERVO_TRAVEL_POS_LEFT);
                 intakeMotor.setPower(1);
-                while (!areShooterMotorsAtSpeed) {
-                    continue;
+                if (!areShooterMotorsAtSpeed) {
+                    timer.reset();
+                    indexerServo.setPosition(INDEXER_SERVO_POS_C);
+                    while (timer.milliseconds() < 750) {
+                        continue;
+                    }
+                    intakeServoRight.setPosition(SERVO_TRANSFER_POS_RIGHT);
+                    intakeServoLeft.setPosition(SERVO_TRANSFER_POS_LEFT);
+                    timer.reset();
+                    while (timer.milliseconds() < 750) {
+                        continue;
+                    }
                 }
-                timer.reset();
-                indexerServo.setPosition(INDEXER_SERVO_POS_C);
-                while (timer.milliseconds() < 750) {
-                    continue;
-                }
-                intakeServoRight.setPosition(SERVO_TRANSFER_POS_RIGHT);
-                intakeServoLeft.setPosition(SERVO_TRANSFER_POS_LEFT);
 
                 if (colorPosA.getDistance(DistanceUnit.MM) < 50) {
                     shootingState = ShootingStates.SHOOTING_A;
@@ -176,10 +210,63 @@ public class IndexerShootingAndIntake {
         return shootingState;
     }
 
-    public void indexBalls(boolean isTriggerPressed) {
 
+
+    public void indexBalls() {
+        switch (indexStates) {
+            case INDEXER_EMPTY:
+                if (doesPosAHaveBall() && doesPosBHaveBall() && doesPosCHaveBall()) {
+                    indexStates = IndexStates.INDEXER_FULL;
+                    break;
+                }
+                if (!doesPosAHaveBall()) {
+                    indexStates = IndexStates.INDEX_TO_POS_A;
+                    break;
+                }
+                if (!doesPosBHaveBall()) {
+                    indexStates = IndexStates.INDEX_TO_POS_B;
+                    break;
+                }
+                if (!doesPosCHaveBall()) {
+                    indexStates = IndexStates.INDEX_TO_POS_C;
+                    break;
+                }
+            case INDEX_TO_POS_A:
+                indexerServo.setPosition(INDEXER_SERVO_POS_A);
+                if (!doesPosAHaveBall()) {
+                    indexStates = IndexStates.INDEXER_EMPTY;
+                    break;
+                } else {
+                    indexStates = IndexStates.INDEX_TO_POS_B;
+                    break;
+                }
+            case INDEX_TO_POS_B:
+                indexerServo.setPosition(INDEXER_SERVO_POS_B);
+                if (!doesPosBHaveBall()) {
+                    indexStates = IndexStates.INDEXER_EMPTY;
+                    break;
+                } else {
+                    indexStates = IndexStates.INDEX_TO_POS_C;
+                    break;
+                }
+            case INDEX_TO_POS_C:
+                indexerServo.setPosition(INDEXER_SERVO_POS_C);
+                if (!doesPosCHaveBall()) {
+                    indexStates = IndexStates.INDEXER_EMPTY;
+                } else {
+                    indexStates = IndexStates.INDEXER_FULL;
+                }
+            case INDEXER_FULL:
+                if (!doesPosAHaveBall() || !doesPosBHaveBall() || !doesPosCHaveBall()) {
+                    indexStates = IndexStates.INDEXER_EMPTY;
+                }
+                break;
+        }
     }
 
+    public IndexStates getIndexingState () {
+        return indexStates;
+    }
 
 
 

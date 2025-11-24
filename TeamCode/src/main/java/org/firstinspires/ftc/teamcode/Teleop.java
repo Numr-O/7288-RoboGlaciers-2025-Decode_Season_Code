@@ -54,6 +54,7 @@ public class Teleop extends OpMode {
     double POSA = 0.9;
     double POSB = 0.5;
     double POSC = 0.09;
+    boolean priority = false;
 
     RobotDrive robotDrive;
     LimeLightTrackingAndDistance limeLightTrackingAndDistance;
@@ -124,15 +125,31 @@ public class Teleop extends OpMode {
         telemetry.addData("velocity", limeLightTrackingAndDistance.calculateRPMForShooter());
 
 
-        if (gamepad1.right_trigger > 0.6) {
-            indexerShootingAndIntake.shootBalls(50);
+
+
+        if (gamepad1.right_trigger > 0.5) {
+//          indexerShootingAndIntake.shootBalls(500);
+            priority = true;
         } else {
-            telemetry.addData("else: ", true);
+//          indexerShootingAndIntake.indexBalls();
+            priority = false;
         }
 
+        if (gamepad1.a && !priority) {
+            robothwde.intakeMotor.setPower(1);
+            robothwde.intakeServoRight.setPosition(SERVOINTAKEPOSRIGHT);
+            robothwde.intakeServoLeft.setPosition(SERVOINTAKEPOSLEFT);
+        } else if (!priority) {
+            robothwde.intakeMotor.setPower(0);
+            robothwde.intakeServoRight.setPosition(SERVOTRAVELPOSRIGHT);
+            robothwde.intakeServoLeft.setPosition(SERVOTRAVELPOSLEFT);
+        }
 
-
+        telemetry.addData("top shooter velocity", robothwde.shooterMotorTop.getVelocity());
+        telemetry.addData("bottom shooter velocity", robothwde.shooterMotorBottom.getVelocity());
+        telemetry.addData("Are Shooter Motors At Speed: ", indexerShootingAndIntake.areShooterMotorsAtSpeed);
         telemetry.addData("Shooter Case", indexerShootingAndIntake.getShooterState());
+        telemetry.addData("Indexing case: ", indexerShootingAndIntake.getIndexingState());
 
 
 
@@ -144,8 +161,6 @@ public class Teleop extends OpMode {
             robothwde.indexerServo.setPosition(0.5);
         } else if (gamepad1.dpad_down) {
             robothwde.indexerServo.setPosition(0.09);
-        } else if (gamepad2.a) {
-            robothwde.indexerServo.setPosition(0);
         }
 
     }

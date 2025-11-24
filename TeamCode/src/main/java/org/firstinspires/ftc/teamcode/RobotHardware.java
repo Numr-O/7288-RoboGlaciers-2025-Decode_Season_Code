@@ -87,11 +87,10 @@ public class RobotHardware {
         shooterMotorTop = hwmap.get(DcMotorEx.class, "smTop");
         shooterMotorBottom = hwmap.get(DcMotorEx.class, "smBottom");
 
-        shooterMotorTop.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
-        shooterMotorBottom.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.FLOAT);
+        shooterMotorTop.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
+        shooterMotorBottom.setZeroPowerBehavior(DcMotorEx.ZeroPowerBehavior.BRAKE);
 
-        shooterMotorTop.setDirection(DcMotorEx.Direction.REVERSE);
-        shooterMotorBottom.setDirection(DcMotorEx.Direction.FORWARD);
+
 
         BNO055IMU.Parameters parameters = new BNO055IMU.Parameters();
         parameters.angleUnit = BNO055IMU.AngleUnit.RADIANS;
